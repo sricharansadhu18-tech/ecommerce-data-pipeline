@@ -81,7 +81,6 @@ Trigger the DAG `ecommerce_analytics_pipeline` once it appears (tasks: `ingest_o
 python3 scripts/setup_metabase.py
 ```
 
-Useful shortcuts: `make up`, `make down`, `make test`, `make validate`.
 
 Sample SQL lives in [`analytics/sample_queries.sql`](analytics/sample_queries.sql).
 
