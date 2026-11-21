@@ -1,8 +1,10 @@
 # E-Commerce Data Pipeline
 
-End-to-end analytics pipeline on the public [Olist Brazilian e-commerce](https://www.kaggle.com/datasets/olistbr/brazilian-ecommerce) dataset (~99k orders, 2016–2018).
+Status: in progress (started November 2026), learning the modern data stack.
 
-Python loads the CSVs into PostgreSQL, dbt models a star schema with tests, Airflow runs the daily job, and Metabase shows the dashboard. Everything starts with Docker Compose.
+I'm building an analytics pipeline on the public [Olist Brazilian e-commerce](https://www.kaggle.com/datasets/olistbr/brazilian-ecommerce) dataset (~99k orders, 2016–2018).
+
+Python loads the CSVs into PostgreSQL, dbt models a star schema with tests, Airflow runs the job, and Metabase shows the dashboard. The stack starts with one Docker Compose command.
 
 ![Metabase dashboard](screenshots/metabase-dashboard-hero.png)
 
@@ -32,7 +34,7 @@ Data model: `fct_orders`, `fct_order_items`, plus `dim_customers`, `dim_products
 
 ## Main finding
 
-Late deliveries are only **6.8%** of delivered orders, but they pull the average review score from **4.29 → 2.27**. Delivery speed shows up more clearly in satisfaction than anything else I looked at.
+Late deliveries are only **6.8%** of delivered orders, but they pull the average review score from **4.29 → 2.27**. From what I have looked at so far, delivery speed has a clearer link to satisfaction than the other factors I checked.
 
 A few other numbers from the marts:
 
@@ -57,6 +59,10 @@ Data quality report (before vs after cleaning):
 
 ![Data quality before and after](screenshots/cleaning/data-quality-before-after.png)
 
+Raw checks I ran on the source files:
+
+![Raw exploratory profile](screenshots/cleaning/raw-eda-notebook.png)
+
 Cleaning logic in the dbt staging models:
 
 ![dbt staging cleaning code](screenshots/cleaning/code-staging.png)
@@ -68,6 +74,27 @@ About 96 dbt tests (`unique`, `not_null`, `relationships`, `accepted_values`, pl
 ![dbt test results](screenshots/cleaning/dbt-test-results.png)
 
 ![Airflow DAG](screenshots/airflow-dag-run.png)
+
+## Roadmap
+
+Done so far:
+
+- [x] Ingest the CSVs into PostgreSQL
+- [x] dbt star schema (staging, intermediate, marts)
+- [x] Data cleaning in staging
+- [x] dbt tests
+- [x] Airflow DAG
+- [x] Metabase dashboard
+- [x] Docker Compose for the local stack
+
+Still to do:
+
+- [ ] SQL window-function analysis
+- [ ] Incremental dbt models
+- [ ] dbt snapshots for customers
+- [ ] More tests
+- [ ] A Power BI version of the dashboard
+- [ ] CI later
 
 ## Run it locally
 
