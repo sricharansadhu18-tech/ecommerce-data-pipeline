@@ -1,0 +1,5 @@
+# Used by the Python ingest job (also installed inside the Airflow image).
+psycopg2-binary>=2.9,<3
+
+# Local checks (CI / make test)
+pytest>=8.0,<9

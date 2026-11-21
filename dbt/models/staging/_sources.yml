@@ -1,0 +1,48 @@
+version: 2
+
+sources:
+  - name: raw
+    description: Olist Brazilian E-Commerce extract loaded by the Python ingestion job.
+    schema: raw
+    tables:
+      - name: orders
+        columns:
+          - name: order_id
+            tests: [not_null, unique]
+          - name: customer_id
+            tests: [not_null]
+      - name: order_items
+        columns:
+          - name: order_id
+            tests: [not_null]
+          - name: order_item_id
+            tests: [not_null]
+      - name: customers
+        columns:
+          - name: customer_id
+            tests: [not_null, unique]
+          - name: customer_unique_id
+            tests: [not_null]
+      - name: products
+        columns:
+          - name: product_id
+            tests: [not_null, unique]
+      - name: sellers
+        columns:
+          - name: seller_id
+            tests: [not_null, unique]
+      - name: order_payments
+        columns:
+          - name: order_id
+            tests: [not_null]
+      - name: order_reviews
+        columns:
+          - name: review_id
+            tests: [not_null]
+          - name: order_id
+            tests: [not_null]
+      - name: geolocation
+      - name: product_category_translation
+        columns:
+          - name: product_category_name
+            tests: [not_null, unique]

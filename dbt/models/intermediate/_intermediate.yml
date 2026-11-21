@@ -1,0 +1,29 @@
+version: 2
+
+models:
+  - name: int_order_payments_rolled_up
+    description: Payments rolled up to one row per order.
+    columns:
+      - name: order_id
+        tests: [not_null, unique]
+      - name: payment_total
+        tests: [not_null]
+  - name: int_order_reviews_rolled_up
+    description: Reviews rolled up to one row per order, keeping the latest score.
+    columns:
+      - name: order_id
+        tests: [not_null, unique]
+  - name: int_order_items_rolled_up
+    description: Line items rolled up to one row per order.
+    columns:
+      - name: order_id
+        tests: [not_null, unique]
+  - name: int_orders_enriched
+    description: Order header with customer, payment, item and review attributes plus delivery flags.
+    columns:
+      - name: order_id
+        tests: [not_null, unique]
+      - name: customer_unique_id
+        tests: [not_null]
+      - name: order_date
+        tests: [not_null]

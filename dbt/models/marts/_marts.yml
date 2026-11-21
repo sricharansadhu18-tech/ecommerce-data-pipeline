@@ -1,0 +1,110 @@
+version: 2
+
+models:
+  - name: dim_date
+    description: Date dimension spanning the full order and delivery calendar.
+    columns:
+      - name: date_key
+        tests: [not_null, unique]
+      - name: date_day
+        tests: [not_null, unique]
+
+  - name: dim_customers
+    description: One row per unique Olist customer (customer_unique_id), with latest location and lifetime metrics.
+    columns:
+      - name: customer_key
+        tests: [not_null, unique]
+      - name: customer_unique_id
+        tests: [not_null, unique]
+
+  - name: dim_products
+    description: One row per product, including the English category name.
+    columns:
+      - name: product_key
+        tests: [not_null, unique]
+      - name: product_id
+        tests: [not_null, unique]
+
+  - name: dim_sellers
+    description: One row per seller.
+    columns:
+      - name: seller_key
+        tests: [not_null, unique]
+      - name: seller_id
+        tests: [not_null, unique]
+
+  - name: fct_orders
+    description: Order-level fact table with payment, delivery, review and customer-state attributes.
+    columns:
+      - name: order_id
+        tests: [not_null, unique]
+      - name: customer_key
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_customers')
+              field: customer_key
+      - name: order_date_key
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_date')
+              field: date_key
+      - name: order_status
+        tests:
+          - accepted_values:
+              values: ['delivered', 'invoiced', 'shipped', 'processing', 'unavailable', 'canceled', 'created', 'approved']
+
+  - name: fct_order_items
+    description: Order-line fact table joined to product, seller, customer and date dimensions.
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns:
+            - order_id
+            - order_item_id
+    columns:
+      - name: order_id
+        tests: [not_null]
+      - name: order_item_id
+        tests: [not_null]
+      - name: product_key
+        tests:
+          - relationships:
+              to: ref('dim_products')
+              field: product_key
+      - name: seller_key
+        tests:
+          - relationships:
+              to: ref('dim_sellers')
+              field: seller_key
+      - name: customer_key
+        tests:
+          - relationships:
+              to: ref('dim_customers')
+              field: customer_key
+      - name: price
+        tests: [not_null]
+
+  - name: mart_monthly_revenue
+    description: Monthly order volume, payment totals and average order value.
+    columns:
+      - name: year_month
+        tests: [not_null, unique]
+
+  - name: mart_category_performance
+    description: Merchandise revenue and order counts by English product category.
+    columns:
+      - name: category
+        tests: [not_null]
+
+  - name: mart_delivery_reviews
+    description: Average delivery time and late rate by review score, delivered orders only.
+    columns:
+      - name: review_score
+        tests: [not_null]
+
+  - name: mart_late_delivery_by_state
+    description: Late delivery rate, delivery time and review score by customer state.
+    columns:
+      - name: customer_state
+        tests: [not_null, unique]

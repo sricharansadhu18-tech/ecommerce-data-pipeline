@@ -1,0 +1,28 @@
+name: olist_ecommerce
+version: "1.0.0"
+config-version: 2
+profile: olist
+
+model-paths: ["models"]
+macro-paths: ["macros"]
+test-paths: ["tests"]
+target-path: "target"
+clean-targets: ["target", "dbt_packages"]
+
+models:
+  olist_ecommerce:
+    +docs:
+      show: true
+    staging:
+      +schema: staging
+      +materialized: view
+    intermediate:
+      +schema: intermediate
+      +materialized: view
+    marts:
+      +schema: marts
+      +materialized: table
+
+# Required by city-name standardisation in staging (customers, sellers, geolocation).
+on-run-start:
+  - "create extension if not exists unaccent"

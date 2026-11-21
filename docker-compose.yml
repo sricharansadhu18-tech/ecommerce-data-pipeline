@@ -1,0 +1,116 @@
+# Local modern data stack for the Olist e-commerce analytics project.
+# Demo credentials only — not for production.
+#
+#   cp .env.example .env
+#   docker compose up --build
+#
+# Services (defaults):
+#   PostgreSQL  :5432
+#   Airflow     :8080
+#   Metabase    :3000
+
+name: ecommerce-pipeline
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: ecommerce-postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-ecommerce}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-ecommerce}
+      POSTGRES_DB: ${POSTGRES_DB:-ecommerce}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER:-ecommerce} -d $${POSTGRES_DB:-ecommerce}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    mem_limit: 1g
+    restart: unless-stopped
+
+  airflow:
+    build:
+      context: .
+      dockerfile: docker/airflow/Dockerfile
+    image: ecommerce-airflow:2.10.4
+    container_name: ecommerce-airflow
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+      AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: "false"
+      AIRFLOW__CORE__FERNET_KEY: ${AIRFLOW_FERNET_KEY:-80pO0y04MuRVK2Y_1qAm6ZTOXl4AnG4GN3aDQ8VWLAg=}
+      AIRFLOW__WEBSERVER__SECRET_KEY: ${AIRFLOW_WEBSERVER_SECRET_KEY:-ecommerce-local-dev-secret-key}
+      AIRFLOW__WEBSERVER__EXPOSE_CONFIG: "true"
+      AIRFLOW__WEBSERVER__RBAC: "true"
+      AIRFLOW__API__AUTH_BACKENDS: airflow.api.auth.backend.basic_auth,airflow.api.auth.backend.session
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://${POSTGRES_USER:-ecommerce}:${POSTGRES_PASSWORD:-ecommerce}@postgres:5432/airflow
+      AIRFLOW__CORE__SQL_ALCHEMY_CONN: postgresql+psycopg2://${POSTGRES_USER:-ecommerce}:${POSTGRES_PASSWORD:-ecommerce}@postgres:5432/airflow
+      AIRFLOW_ADMIN_USER: ${AIRFLOW_ADMIN_USER:-admin}
+      AIRFLOW_ADMIN_PASSWORD: ${AIRFLOW_ADMIN_PASSWORD:-admin}
+      PGHOST: postgres
+      PGPORT: "5432"
+      PGUSER: ${POSTGRES_USER:-ecommerce}
+      PGPASSWORD: ${POSTGRES_PASSWORD:-ecommerce}
+      PGDATABASE: ${POSTGRES_DB:-ecommerce}
+      OLIST_DATA_DIR: /opt/ecommerce/data/raw
+      DBT_PROJECT_DIR: /opt/ecommerce/dbt
+      DBT_PROFILES_DIR: /opt/ecommerce/dbt
+      DBT_TARGET_PATH: /tmp/dbt_target
+      DBT_LOG_PATH: /tmp/dbt_logs
+    ports:
+      - "${AIRFLOW_PORT:-8080}:8080"
+      - "8081:8081"
+    volumes:
+      - ./airflow/dags:/opt/airflow/dags
+      - ./src:/opt/ecommerce/src
+      - ./dbt:/opt/ecommerce/dbt
+      - ./data:/opt/ecommerce/data
+      - airflow_logs:/opt/airflow/logs
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/health')\""]
+      interval: 15s
+      timeout: 5s
+      retries: 30
+      start_period: 60s
+    mem_limit: 2g
+    restart: unless-stopped
+
+  metabase:
+    image: metabase/metabase:v0.52.16
+    container_name: ecommerce-metabase
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      MB_DB_TYPE: postgres
+      MB_DB_DBNAME: metabase
+      MB_DB_PORT: 5432
+      MB_DB_USER: ${POSTGRES_USER:-ecommerce}
+      MB_DB_PASS: ${POSTGRES_PASSWORD:-ecommerce}
+      MB_DB_HOST: postgres
+      JAVA_TIMEZONE: America/Sao_Paulo
+      JAVA_TOOL_OPTIONS: "-Xmx768m"
+    ports:
+      - "${METABASE_PORT:-3000}:3000"
+    volumes:
+      - metabase_data:/metabase-data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:3000/api/health || wget -q -O- http://localhost:3000/api/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 40
+      start_period: 90s
+    mem_limit: 1280m
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  airflow_logs:
+  metabase_data:

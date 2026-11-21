@@ -1,0 +1,5 @@
+CREATE DATABASE airflow;
+CREATE DATABASE metabase;
+
+\c ecommerce
+CREATE EXTENSION IF NOT EXISTS unaccent;
