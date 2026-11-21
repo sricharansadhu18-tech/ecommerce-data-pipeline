@@ -53,9 +53,19 @@ I kept dirty business facts and fixed naming / grain issues in staging instead o
 - Reviews kept at `(review_id, order_id)` because some `review_id`s repeat across orders
 - **8 orders** marked delivered with a null delivery date — left as-is and flagged by a dbt warning (not “fixed”)
 
+Data quality report (before vs after cleaning):
+
+![Data quality before and after](screenshots/cleaning/data-quality-before-after.png)
+
+Cleaning logic in the dbt staging models:
+
+![dbt staging cleaning code](screenshots/cleaning/code-staging.png)
+
 ## Tests
 
 About 96 dbt tests (`unique`, `not_null`, `relationships`, `accepted_values`, plus a few singular SQL checks). Last run: **95 passed, 1 warning** (those eight missing delivery dates).
+
+![dbt test results](screenshots/cleaning/dbt-test-results.png)
 
 ![Airflow DAG](screenshots/airflow-dag-run.png)
 
