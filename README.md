@@ -75,6 +75,15 @@ About 96 dbt tests (`unique`, `not_null`, `relationships`, `accepted_values`, pl
 
 ![Airflow DAG](screenshots/airflow-dag-run.png)
 
+## Challenges I ran into
+
+A few things that slowed me down or that I chose not to hide:
+
+- The first Airflow run failed because dbt could not write `target/` and `logs/` to the bind mount. I pointed those directories at `/tmp` instead.
+- Docker bind mounts looked empty at first, so the containers were not seeing the project files until I fixed the volume paths.
+- Eight orders are marked delivered but have no delivery date. I left them as a dbt warning rather than filling in a date.
+- 789 `review_id` values are reused across different orders, so I kept reviews at the `(review_id, order_id)` grain instead of treating `review_id` as unique.
+
 ## Roadmap
 
 Done so far:
